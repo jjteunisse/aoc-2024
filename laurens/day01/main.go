@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -20,12 +21,12 @@ func main() {
 		log.Fatalf("failed to read file: %v", err)
 	}
 
-	part1, part2 := solve(string(data))
-	fmt.Printf("Part 1: %d\n", part1)
-	fmt.Printf("Part 2: %d\n", part2)
+	answer1, time1, answer2, time2 := solve(string(data))
+	fmt.Printf("Part 1: %d (Time: %d ms)\n", answer1, time1)
+	fmt.Printf("Part 2: %d (Time: %d ms)\n", answer2, time2)
 }
 
-func solve(input string) (int, int) {
+func solve(input string) (int, int64, int, int64) {
 	lines := strings.Split(strings.TrimSpace(input), "\n")
 
 	listOne := make([]int, len(lines))
@@ -38,10 +39,33 @@ func solve(input string) (int, int) {
 		listTwo[i], _ = strconv.Atoi(values[1])
 	}
 
-	part1 := part1(listOne, listTwo)
-	part2 := part2(listOne, listTwo)
+	answer1Chan := make(chan int)
+	answer2Chan := make(chan int)
+	time1Chan := make(chan int64)
+	time2Chan := make(chan int64)
 
-	return part1, part2
+	go func() {
+		start := time.Now()
+		result := part1(listOne, listTwo)
+		duration := time.Since(start).Milliseconds()
+		answer1Chan <- result
+		time1Chan <- duration
+	}()
+
+	go func() {
+		start := time.Now()
+		result := part2(listOne, listTwo)
+		duration := time.Since(start).Milliseconds()
+		answer2Chan <- result
+		time2Chan <- duration
+	}()
+
+	part1Result := <-answer1Chan
+	time1Result := <-time1Chan
+	part2Result := <-answer2Chan
+	time2Result := <-time2Chan
+
+	return part1Result, time1Result, part2Result, time2Result
 }
 
 func part1(listOne []int, listTwo []int) int {
