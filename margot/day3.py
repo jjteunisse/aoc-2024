@@ -5,12 +5,10 @@ def main():
     path = "inputs/day3/"
     name = "input"
     
-    line = next(open(path+name+".txt"))
-    
     pattern = re.compile("mul\((\d{1,3}),(\d{1,3})\)")
     
-    #Task 1
-    print("Sum of multiplications:", sum([int(match.groups()[0])*int(match.groups()[1]) for match in pattern.finditer(line)]))
+    #Task 1. Not sure if I should consider lines separately or combine them, but since the given input has lines all ending in mul(...,...) this isn't a problem.
+    print("Sum of multiplications:", sum([int(match.groups()[0])*int(match.groups()[1]) for line in open(path+name+".txt") for match in pattern.finditer(line)]))
     
     return
 
