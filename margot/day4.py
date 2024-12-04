@@ -4,7 +4,7 @@ import re
 import multiprocessing as mp
 import time
 
-def check_xmas(row:np.ndarray) -> bool:
+def check_xmas(row:np.ndarray) -> int:
     count = 0
     line = "".join(row)
     for match in re.finditer("XMAS", line):
@@ -14,7 +14,7 @@ def check_xmas(row:np.ndarray) -> bool:
         count += 1
     return count
 
-def check_crossmas(square:np.ndarray) -> bool:
+def check_crossmas(square:np.ndarray) -> int:
     diag1 = "".join(np.diag(square, 0))
     diag2 = "".join(np.diag(square[:, ::-1], 0))
     return (diag1 == "MAS" or diag1 == "SAM") and (diag2 == "MAS" or diag2 == "SAM")
