@@ -1,4 +1,4 @@
-# > py run.py [-cp] [-d<day>] [-lp] [-p<part>] [-t]
+# (venv) > py run.py <day> [-cp] [-lp] [-p1] [-p2] [-t]
 
 from cProfile import Profile
 from line_profiler import LineProfiler
@@ -6,14 +6,16 @@ from sys import argv, path
 from time import time
 
 if __name__ == '__main__':
-	day = next((x[1:] for x in argv if x.startswith('-d')), 'd1')
-	parts = next(([x[1:]] for x in argv if x.startswith('-p')), ['p1', 'p2'])
+	day = f'day_{argv[1]}'
 	env = 'tst' if '-t' in argv else 'prd'
 
-	path.append('src')
-	data = open(f'data/{env}/{day}.txt').read()
+	parts = ['p1', 'p2']
+	if   '-p1' in argv: parts.remove('p2')
+	elif '-p2' in argv: parts.remove('p1')
 
+	path.append('src')
 	module = __import__(day)
+	data = open(f'data/{env}/{day}.txt').read()
 	if '-cp' in argv:
 		profiler = Profile()
 		profiler.enable()
