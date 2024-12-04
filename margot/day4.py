@@ -1,7 +1,6 @@
 import sys
 import numpy as np
 import re
-import multiprocessing as mp
 import time
 
 def check_xmas(row:np.ndarray) -> int:
@@ -43,9 +42,10 @@ def main():
     
     #Task 2
     start = time.time()
-    iterator = (data[i:i+3, j:j+3] for i, j in np.ndindex(data.shape[0]-2, data.shape[1]-2))
-    with mp.Pool() as pool:
-        count = sum(pool.map_async(check_crossmas, iterator).get())
+    iterator = (data[i-1:i+2, j-1:j+2] for i, j in zip(*np.where(data == "A")) if not (i == 0 or j == 0) or (i == data.shape[0] or j == data.shape[1]))
+    count = 0
+    for square in iterator:
+        count += check_crossmas(square)
     end = time.time()
     print("Number of cross-MAS matches:", count)
     print("Runtime:", end-start)
