@@ -27,12 +27,12 @@ class Guard():
 
 def main():
     path = "inputs/day6/"
-    name = "test"
+    name = "input"
     
     data = np.array([list(line.strip()) for line in open(path+name+".txt")])
     rocks = (data == "#")
     guard_position = tuple(x[0] for x in np.where((data != "#")*(data != ".")))
-    direction_mapping = {">":(0, 1), "<":(0, -1), "^":(0, -1), "v":(0, 1)}
+    direction_mapping = {">":(0, 1), "<":(0, -1), "^":(-1, 0), "v":(1, 0)}
     guard_direction = direction_mapping[data[guard_position]]
     
     guard = Guard(guard_position, guard_direction)
@@ -44,6 +44,7 @@ def main():
         try:
             position, direction = guard.update(rocks)
             if (position, direction) in visited:
+                print("Guard has completed a loop.")
                 loop = True
             else:
                 visited.add((position, direction))
