@@ -2,7 +2,6 @@ import sys
 from typing import Tuple, Iterator, List
 import numpy as np
 import time
-import multiprocessing as mp
 
 Position = Tuple[int, int]
 Direction  = Tuple[int, int]
@@ -94,25 +93,24 @@ def main():
     guard = Guard(guard_position, guard_direction)
     
     guard.walk(rocks)
-    visited = {position for (position, direction) in guard.history}
+    visited = [position for (position, direction) in guard.history]
         
     end = time.time()
 
-    print("Number of visited positions:", len(visited))
+    print("Number of visited positions:", len(set(visited)))
     print("Runtime:", end-start)
     
     #Task 2
     start = time.time()
     
     rock_positions = set()
-    guard_positions = [position for (position, direction) in guard.history]
     
     for no, (position, direction) in enumerate(guard.history[:-1]):
         ghost = Guard(position, direction)
         in_front = ghost.in_front()
         
         #There must not already be a rock in place, and the rock cannot cross the preceding path of the guard.
-        if rocks[in_front] or in_front in guard_positions[:no]:
+        if rocks[in_front] or in_front in visited[:no]:
             continue
             
         rocks_plus_one = rocks.copy()
