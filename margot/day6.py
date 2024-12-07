@@ -73,7 +73,7 @@ class Guard():
                 
             except Exception as exception:
                 return False
-        
+       
 def main():
     path = "inputs/day6/"
     name = "input"
@@ -101,6 +101,7 @@ def main():
     
     rock_positions = set()
     guard_positions = [position for (position, direction) in guard.history]
+    
     for no, (position, direction) in enumerate(guard.history[:-1]):
         
         i = position[0] + direction[0]
