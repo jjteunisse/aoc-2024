@@ -116,9 +116,7 @@ def main():
         rocks_plus_one = rocks.copy()
         rocks_plus_one[in_front] = True
 
-        ghost.turn()
-        loop = ghost.walk(rocks_plus_one, quick=True)
-        if loop:
+        if ghost.walk(rocks_plus_one, quick=True):
             rock_positions.add(in_front)
     
     end = time.time()
