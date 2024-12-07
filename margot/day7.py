@@ -35,19 +35,19 @@ def main():
     path = "inputs/day7/"
     name = "input"
     
-    data = [(int(line.strip().split(":")[0]), tuple(int(val) for val in line.strip().split(":")[1].split())) for line in open(path+name+".txt")]
-    
     pool = mp.Pool()
     
     #Task 1
     start = time.time()
-    print("Total calibration result:", sum(pool.map_async(calibration_result, open(path+name+".txt")).get()))
+    with open(path+name+".txt") as file:
+        print("Total calibration result:", sum(pool.map_async(calibration_result, file).get()))
     end = time.time()
     print("Runtime:", end-start)
     
     #Task 2
     start = time.time()
-    print("Total calibration result with concatenation:", sum(pool.map_async(calibration_result_with_concatenation, open(path+name+".txt")).get()))
+    with open(path+name+".txt") as file:
+        print("Total calibration result with concatenation:", sum(pool.map_async(calibration_result_with_concatenation, file).get()))
     end = time.time()
     print("Runtime:", end-start)
     

@@ -23,7 +23,8 @@ def main():
     name = "input"
     
     start = time.time()
-    data = np.array([tuple(line.strip()) for line in open(path+name+".txt")])
+    with open(path+name+".txt") as file:
+        data = np.array([tuple(line.strip()) for line in file])
     
     #Task 1
     count = 0
