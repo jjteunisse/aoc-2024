@@ -45,10 +45,7 @@ class Guard():
         
     def quickstep(self, rocks:Rocks) -> Tuple[Position, Direction]:
         position, direction = self.position, self.direction
-        if (position, direction) in self.history:
-            return True
-        else:
-            self.history.append((position, direction))
+        self.history.append((position, direction))
                 
         i, j = position
         line_of_sight = self.line_of_sight(rocks)
