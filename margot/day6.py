@@ -1,11 +1,12 @@
 import sys
-from typing import Tuple, Iterator
+from typing import Tuple, Iterator, List
 import numpy as np
 import time
 import multiprocessing as mp
 
-Position = Tuple[int]
-Direction  = Tuple[int]
+Position = Tuple[int, int]
+Direction  = Tuple[int, int]
+Rocks = np.ndarray
 
 class Guard():
     def __init__(self, starting_position:Position, starting_direction:Direction):
@@ -19,10 +20,20 @@ class Guard():
     def turn(self) -> Direction:
         self.direction = (self.direction[1], -self.direction[0])
         
-    def update(self, rocks:np.ndarray) -> Tuple[Position, Direction]:
+    def line_of_sight(self, rocks:Rocks) -> List[bool]:
+        i, j = self.position
+        direction = self.direction
+        if direction[0] == 0:
+            return list(rocks[i, j+direction[1]::direction[1]])
+        else:
+            return list(rocks[i+direction[0]::direction[0], j])
+        
+    def in_front(self) -> Position:
+        return (self.position[0] + self.direction[0], self.position[1] + self.direction[1])
+        
+    def step(self, rocks:Rocks) -> Tuple[Position, Direction]:
         self.history.append((self.position, self.direction))
-        i = self.position[0] + self.direction[0]
-        j = self.position[1] + self.direction[1]
+        i, j = self.in_front()
         if (i == -1 or j == -1) or (i == rocks.shape[0] or j == rocks.shape[1]):
             raise Exception("Guard has left the area.")
         
@@ -33,43 +44,37 @@ class Guard():
         
         return (self.position, self.direction)
         
-    def walk(self, rocks:np.ndarray) -> bool:
+    def quickstep(self, rocks:Rocks) -> Tuple[Position, Direction]:
+        position, direction = self.position, self.direction
+        if (position, direction) in self.history:
+            return True
+        else:
+            self.history.append((position, direction))
+                
+        i, j = position
+        line_of_sight = self.line_of_sight(rocks)
+        if any(line_of_sight):
+            i += direction[0]*line_of_sight.index(True)
+            j += direction[1]*line_of_sight.index(True)
+        else:
+            raise Exception("Guard has left the area.")
+
+        self.position = (i, j)
+        self.turn()
+        return (self.position, self.direction)
+        
+        
+    def walk(self, rocks:Rocks, quick:bool=False) -> bool:
         #Walk until either a loop is reached or the guard leaves the area.
         while True:
             try:
                 if (self.position, self.direction) in self.history:
                     return True
                 
-                self.update(rocks)
-                
-            except Exception as exception:
-                return False
-                
-    def quickwalk(self, rocks:np.ndarray) -> bool:
-        while True:
-            try:
-                position, direction = self.position, self.direction
-                if (position, direction) in self.history:
-                    return True
+                if quick:
+                    self.quickstep(rocks)
                 else:
-                    self.history.append((position, direction))
-                
-                i, j = position
-                if direction[0] == 0:
-                    line_of_sight = list(rocks[i, j+direction[1]::direction[1]])
-                    if any(line_of_sight):
-                        j += direction[1]*line_of_sight.index(True)
-                    else:
-                        raise Exception("Guard has left the area.")
-                else:
-                    line_of_sight = list(rocks[i+direction[0]::direction[0], j])
-                    if any(line_of_sight):
-                        i += direction[0]*line_of_sight.index(True)
-                    else:
-                        raise Exception("Guard has left the area.")
-
-                self.position = (i, j)
-                self.turn()
+                    self.step(rocks)
                 
             except Exception as exception:
                 return False
@@ -103,23 +108,20 @@ def main():
     guard_positions = [position for (position, direction) in guard.history]
     
     for no, (position, direction) in enumerate(guard.history[:-1]):
-        
-        i = position[0] + direction[0]
-        j = position[1] + direction[1]
+        ghost = Guard(position, direction)
+        in_front = ghost.in_front()
         
         #There must not already be a rock in place, and the rock cannot cross the preceding path of the guard.
-        if rocks[i, j] or (i, j) in guard_positions[:no]:
+        if rocks[in_front] or in_front in guard_positions[:no]:
             continue
             
         rocks_plus_one = rocks.copy()
-        rocks_plus_one[i, j] = True
-            
-        ghost = Guard(position, direction)
-        ghost.turn()
+        rocks_plus_one[in_front] = True
 
-        loop = ghost.quickwalk(rocks_plus_one)
+        ghost.turn()
+        loop = ghost.walk(rocks_plus_one, quick=True)
         if loop:
-            rock_positions.add((i, j))
+            rock_positions.add(in_front)
     
     end = time.time()
     
