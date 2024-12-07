@@ -79,7 +79,9 @@ def main():
     path = "inputs/day6/"
     name = "input"
     
-    data = np.array([list(line.strip()) for line in open(path+name+".txt")])
+    with open(path+name+".txt") as file:
+        data = np.array([list(line.strip()) for line in file])
+    
     rocks = (data == "#")
     guard_position = tuple(x[0] for x in np.where((data != "#")*(data != ".")))
     direction_mapping = {">":(0, 1), "<":(0, -1), "^":(-1, 0), "v":(1, 0)}

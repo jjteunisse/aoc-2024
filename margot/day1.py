@@ -6,7 +6,8 @@ def main():
     path = "inputs/day1/"
     name = "input"
     
-    data = np.array([line.split() for line in open(path+name+".txt")], dtype=int)
+    with open(path+name+".txt") as file:
+        data = np.array([line.split() for line in file], dtype=int)
 
     #Part 1
     print("Total distance:", np.sum(np.absolute(np.diff(np.sort(data, axis=0), axis=1)), axis=0)[0])

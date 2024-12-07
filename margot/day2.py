@@ -5,7 +5,8 @@ def main():
     path = "inputs/day2/"
     name = "input"
     
-    data = [np.array(line.split(), dtype=int) for line in open(path+name+".txt")]
+    with open(path+name+".txt") as file:
+        data = [np.array(line.split(), dtype=int) for line in file]
     
     #Task 1
     diffs = [np.diff(row) for row in data]
