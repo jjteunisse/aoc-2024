@@ -13,10 +13,9 @@ def main():
     #Task 1 
     antinodes = {}
     for freq in antennas:
-        antinodes[freq] = set()
-        for pos1 in antennas[freq]:
-            i1, j1 = pos1
-            antinodes[freq].update({(2*i1-i2, 2*j1-j2) for (i2, j2) in antennas[freq]-{pos1}})
+        #Generate antinodes.
+        antinodes[freq] = {(2*i1-i2, 2*j1-j2) for (i1, j1) in antennas[freq] for (i2, j2) in antennas[freq]-{(i1, j1)}}
+        #Check that antinodes fall within input matrix. 
         antinodes[freq] = {(i, j) for (i, j) in antinodes[freq] if (i >= 0 and j >= 0) and (i < data.shape[0] and j < data.shape[1])}
     all_antinodes = set().union(*antinodes.values())
     
