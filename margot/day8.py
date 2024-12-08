@@ -27,8 +27,8 @@ def main():
     wavevectors = {freq:{(x1, y1):{(x1-x2, y1-y2) for (x2, y2) in antennas[freq]-{(x1, y1)}} for (x1, y1) in antennas[freq]} for freq in antennas}
     
     #(Task 1) Only consider antinodes which are one wave vector away.
-    #I think the typical notation is k for the wave vector, so I will stick w/ this.
-    antinodes = {freq:{(x+kx, y+ky) for (x, y) in antennas[freq] for (kx, ky) in wavevectors[freq][(x, y)] if in_grid((x+kx, y+ky), data)}
+    #I think the appropriate notation is lambda, so I will stick w/ this.
+    antinodes = {freq:{(x+lamb_x, y+lamb_y) for (x, y) in antennas[freq] for (lamb_x, lamb_y) in wavevectors[freq][(x, y)] if in_grid((x+lamb_x, y+lamb_y), data)}
                            for freq in antennas}
     print("Number of unique antinode locations:", len(join_antinodes(antinodes)))
     
@@ -36,12 +36,12 @@ def main():
     antinodes = {freq:set() for freq in antennas}
     for freq in antennas:
         for pos in wavevectors[freq]:
-            for (kx, ky) in wavevectors[freq][pos]:
+            for (lamb_x, lamb_y) in wavevectors[freq][pos]:
                 x, y = pos
                 while in_grid((x, y), data):
                     antinodes[freq].add((x, y))
-                    x += kx
-                    y += ky
+                    x += lamb_x
+                    y += lamb_y
     print("Number of unique antinode locations for all integer multiples:", len(join_antinodes(antinodes)))
     
     return
