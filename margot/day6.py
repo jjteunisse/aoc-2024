@@ -92,7 +92,10 @@ def main():
     guard = Guard(guard_position, guard_direction)
     
     guard.walk(rocks)
-    visited = [position for (position, direction) in guard.history]
+    #I don't need the guard anymore after they leave the area, but I'll still need their history.
+    history = guard.history
+    del guard
+    visited = [position for (position, direction) in history]
         
     end = time.time()
 
@@ -104,8 +107,9 @@ def main():
     
     rock_positions = set()
     
-    for no, (position, direction) in enumerate(guard.history[:-1]):
-        ghost = Guard(position, direction)
+    for no in range(len(history)-1):
+        #I'm retracing the guard's steps to check if I can create a loop at each point - after this I can clear the history. 
+        ghost = Guard(*history.pop(0))
         in_front = ghost.in_front()
         
         #There must not already be a rock in place, and the rock cannot cross the preceding path of the guard.
