@@ -4,6 +4,7 @@ from typing import Dict, Set, Tuple
 
 Frequency = str
 Position = Tuple[int, int]
+WaveVector = Tuple[int, int]
 
 def in_grid(position:Position, data:np.ndarray) -> bool:
     x, y = position
