@@ -22,10 +22,7 @@ def main():
     for trailhead in height_map[0]:
         queue = {trailhead}
         for height in range(1, 10):
-            queue_new = set()
-            for source in queue:
-                queue_new.update({target for target in neighbours(source) if target in height_map[height]})
-            queue = queue_new
+            queue = {target for source in queue for target in neighbours(source) if target in height_map[height]})
         total_score += len(queue)
     print("Total score:", total_score)
     
