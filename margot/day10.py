@@ -1,12 +1,18 @@
 import sys
 import numpy as np
-from typing import Tuple, List
+from typing import Tuple, List, Dict, Set
 
 Position = Tuple[int, int]
 
 def neighbours(position:Position) -> List[Position]:
     i, j = position
     return [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
+    
+def score(trailhead:Position, height_map:Dict[int, Set[Position]]) -> int:
+    queue = {trailhead}
+    for height in range(1, 10):
+        queue = {target for source in queue for target in neighbours(source) if target in height_map[height]}
+    return len(queue)
 
 def main():
     path = "inputs/day10/"
@@ -18,12 +24,8 @@ def main():
     height_map = {height:set(zip(*np.where(data == height))) for height in range(10)}
     
     #Task 1
-    total_score = 0
-    for trailhead in height_map[0]:
-        queue = {trailhead}
-        for height in range(1, 10):
-            queue = {target for source in queue for target in neighbours(source) if target in height_map[height]})
-        total_score += len(queue)
+    total_score = sum([score(trailhead, height_map) for trailhead in height_map[0]])
+
     print("Total score:", total_score)
     
     #(Task 2) yeah no kidding
