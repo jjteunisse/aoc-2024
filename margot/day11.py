@@ -1,5 +1,6 @@
 import sys
 from typing import Sequence, Callable, List
+import time
 
 Stone=int
 
@@ -26,7 +27,7 @@ def blink(stone:Stone, rules:Sequence[Callable]) -> List[Stone]:
             return output
     return [stone]
 
-def main():
+def main(num_blinks:int):
     path = "inputs/day11/"
     name = "input"
     
@@ -34,20 +35,31 @@ def main():
         line = next(file)
         data = [int(i) for i in line.split()]
         
-    #I suppose I can just make a list of functions? 
-    stones = data.copy()
+    #Though the exercise specifies that the stones remain in order, this order is not important.
+    #Just saving the number of instances of each number keeps the problem from getting crazy, since the same numbers keep repeating.
+    stones = {stone:data.count(stone) for stone in set(data)}
+    
+    #I suppose there's nothing against just making a list of functions.
     rules = [replace_zero_by_one, split, multiply]
     
-    #(Task 1) Can maybe do this more efficiently by just keeping track of the counts, but let's start by doing this as written.
-    num_blinks = 25
+    start = time.time()
     for _ in range(num_blinks):
-        stones_new = []
-        for stone in stones:
-            stones_new += blink(stone, rules)
+        stones_new = {}
+        for old_stone in stones:
+            for stone in blink(old_stone, rules):
+                if stone in stones_new:
+                    stones_new[stone] += stones[old_stone]
+                else:
+                    stones_new[stone] = stones[old_stone]
         stones = stones_new
-    print("Number of stones after {} blinks:".format(num_blinks), len(stones))
+    end = time.time()
+    print("Number of stones after {} blinks:".format(num_blinks), sum(stones.values()))
+    print("Runtime:", end-start)
     
     return
     
 if __name__ == "__main__":
-    sys.exit(main())
+    #Since the exercise essentially just asks to run the main function twice, only w/ different num_blinks, I'll just do that.
+    main(25)
+    main(75)
+    sys.exit()
