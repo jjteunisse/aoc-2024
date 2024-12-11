@@ -21,7 +21,7 @@ if __name__ == '__main__':
 		profiler.enable()
 		module.run(data, parts)
 		profiler.disable()
-		profiler.print_stats(sort='tottime')
+		profiler.print_stats(sort='cumtime')
 	elif '-lp' in argv:
 		profiler = LineProfiler()
 		for func in dir(module):
