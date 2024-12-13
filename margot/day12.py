@@ -1,33 +1,38 @@
 import sys
 import numpy as np
-from typing import Tuple, Dict, Set
+from typing import Tuple, Dict, Set, List
         
 Position = Tuple[int, int]
+
+def neighbours(position:Position) -> List[Position]:
+    i, j = position
+    return [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
         
 def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
     plant_regions = {}
     mapping = {}
+    region = 0
     for plant in np.unique(data):
         mask = (data == plant)
-        plant_iterator = zip(*np.where(mask))
-        plant_regions[plant] = [len(mapping)+1]
-        mapping[len(mapping)+1] = {next(plant_iterator)}
-        for (i, j) in plant_iterator:
-            connected = False
-            for region in plant_regions[plant]:
-                if ((i-1, j) in mapping[region]) or ((i, j-1) in mapping[region]):
-                    mapping[region].add((i, j))
-                    connected = True
-                    break
-            if not connected:
-                plant_regions[plant].append(len(mapping)+1)
-                mapping[len(mapping)+1] = {(i, j)}
-    print(plant_regions)
+        plant_positions = set(zip(*np.where(mask)))
+        queue = [plant_positions.pop()]
+        while True:
+            mapping[region] = set()
+            while any(queue):
+                queue.extend([position for position in neighbours(queue[0]) if position in plant_positions-mapping[region]])
+                mapping[region].add(queue.pop(0))
+            plant_positions -= mapping[region]
+            region += 1
+            if any(plant_positions):
+                queue = [plant_positions.pop()]
+            else:
+                break
+        
     return mapping
 
 def main():
     path = "inputs/day12/"
-    name = "test2"
+    name = "input"
     
     with open(path+name+".txt") as file:
         data = np.array([list(line.strip()) for line in file])
@@ -43,8 +48,6 @@ def main():
             perimeters[region] += not (i+1, j) in region_mapping[region]
             perimeters[region] += not (i, j-1) in region_mapping[region]
             perimeters[region] += not (i, j+1) in region_mapping[region]
-    for region in region_mapping:
-        print(region, areas[region], perimeters[region])
     
     
     fencing_price = sum({perimeters[region]*areas[region] for region in region_mapping})
