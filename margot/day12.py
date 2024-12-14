@@ -7,21 +7,27 @@ Position = Tuple[int, int]
 
 def num_corners(pos:Position, positions:Set[Position]):
     i, j = pos
-    top = (i-1, j) in positions
-    bottom = (i+1, j) in positions
-    left = (i, j-1) in positions
-    right = (i, j+1) in positions
-    is_vertical_edge = top and bottom
-    is_horizontal_edge = left and right
-
-    if is_horizontal_edge or is_vertical_edge:
-        return 0
-    elif (top or bottom) and (left or right):
-        return 1
-    elif (top or bottom) or (left or right):
-        return 2
-    else:
-        return 4
+    north = (i-1, j) in positions
+    south = (i+1, j) in positions
+    west = (i, j-1) in positions
+    east = (i, j+1) in positions
+    ne = (i-1, j+1) in positions
+    nw = (i-1, j-1) in positions
+    se = (i+1, j+1) in positions
+    sw = (i+1, j-1) in positions
+    
+    count = 0
+    count += not nw and not (north^west)
+    count += not sw and not (south^west)
+    count += not se and not (south^east)
+    count += not ne and not (north^east)
+    count += nw and not (north or west)
+    count += sw and not (south or west)
+    count += ne and not (north or east)
+    count += se and not (south or east)
+    
+    return count
+    
 
 def count_edges(positions:Set[Position]) -> int:
     #Though the task asks for the number of edges, I'm really counting the number of corners which is the same.
@@ -46,6 +52,7 @@ def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
             plant_positions -= mapping[region]
             region += 1
 
+            #If all plots for given plant have been mapped, continue to the next plant, else initiate a new region.
             if any(plant_positions):
                 queue = {plant_positions.pop()}
             else:
@@ -54,18 +61,21 @@ def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
     return mapping
 
 def main():
+    start = time.time()
     path = "inputs/day12/"
-    name = "test"
+    name = "input"
     
     with open(path+name+".txt") as file:
         data = np.array([list(line.strip()) for line in file])
         
+    region_mapping = map_regions(data)
+    
+    end = time.time()
+    
+    print("Runtime for data readout:", end-start)
     
     #Task 1
     start = time.time()
-    
-    region_mapping = map_regions(data)
-    
     areas = {region:len(region_mapping[region]) for region in region_mapping}
     perimeters = {region: 0 for region in region_mapping}
     for region in perimeters:
@@ -80,14 +90,14 @@ def main():
     end = time.time()
     
     print("Total price of fencing:", fencing_price)
-    print("Runtime:", end-start)
+    print("Runtime for task 1:", end-start)
 
     #Task 2
-    for region in areas:
-        print(region, region_mapping[region], areas[region], count_edges(region_mapping[region]))
-
+    start = time.time()
     fencing_price = sum([count_edges(region_mapping[region])*areas[region] for region in region_mapping])
+    end = time.time()
     print("Total price of fencing w/ bulk discount:", fencing_price)
+    print("Runtime for task 2:", end-start)
     
     return
     
