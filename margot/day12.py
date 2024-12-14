@@ -24,8 +24,7 @@ def num_corners(pos:Position, positions:Set[Position]):
     for _ in range(4):
         ordinal = next(directions)
         cardinal2 = next(directions)
-        count += not ordinal and not (cardinal1^cardinal2)
-        count += ordinal and not (cardinal1 or cardinal2)
+        count += (not ordinal and not (cardinal1^cardinal2)) or (ordinal and not (cardinal1 or cardinal2))
         cardinal1 = cardinal2
     
     return count
