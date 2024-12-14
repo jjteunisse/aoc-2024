@@ -4,6 +4,7 @@ from cProfile import Profile
 from line_profiler import LineProfiler
 from sys import argv, path
 from time import time
+from types import FunctionType
 
 if __name__ == '__main__':
 	day = f'day_{argv[1]}'
@@ -25,7 +26,10 @@ if __name__ == '__main__':
 	elif '-lp' in argv:
 		profiler = LineProfiler()
 		for func in dir(module):
-			if not func.startswith('_'):
+			if (
+				isinstance(getattr(module, func), FunctionType) and
+				not func.startswith('_')
+			):
 				profiler.add_function(getattr(module, func))
 		profiler.enable()
 		module.run(data, parts)

@@ -1,3 +1,4 @@
+from bisect import bisect
 from itertools import cycle
 
 class Dir: N, E, S, W = (-1, 0), (0, 1), (1, 0), (0, -1)
@@ -44,40 +45,28 @@ def obstacle_solve(
 	while True:
 		y_dir, x_dir = next(directions)
 		if (y, x) not in visited:
-			visited[(y, x)] = [(y_dir, x_dir)]
-		elif (y_dir, x_dir) in visited[(y, x)]:
+			visited[(y, x)] = (y_dir, x_dir)
+		elif visited[(y, x)] == (y_dir, x_dir):
 			# Previous position reached - infinite loop.
 			return False
 
 		match (y_dir, x_dir):
 			case Dir.N:
-				if col_obs[x] == [] or y < col_obs[x][0]:
-					return True
-				else:
-					i = len(col_obs[x]) - 1
-					while col_obs[x][i] > y: i -= 1
-					y = col_obs[x][i] + 1
+				b = bisect(col_obs[x], y)
+				if b == 0: return True
+				else: y = col_obs[x][b - 1] + 1
 			case Dir.E:
-				if row_obs[y] == [] or x > row_obs[y][-1]:
-					return True
-				else:
-					i = 0
-					while row_obs[y][i] < x: i += 1
-					x = row_obs[y][i] - 1
+				b = bisect(row_obs[y], x)
+				if b == len(row_obs[y]): return True
+				else: x = row_obs[y][b] - 1
 			case Dir.S:
-				if col_obs[x] == [] or y > col_obs[x][-1]:
-					return True
-				else:
-					i = 0
-					while col_obs[x][i] < y: i += 1
-					y = col_obs[x][i] - 1
+				b = bisect(col_obs[x], y)
+				if b == len(col_obs[x]): return True
+				else: y = col_obs[x][b] - 1
 			case Dir.W:
-				if row_obs[y] == [] or x < row_obs[y][0]:
-					return True
-				else:
-					i = len(row_obs[y]) - 1
-					while row_obs[y][i] > x: i -= 1
-					x = row_obs[y][i] + 1
+				b = bisect(row_obs[y], x)
+				if b == 0: return True
+				else: x = row_obs[y][b - 1] + 1
 
 def transposed(grid: list[list[str]]):
 	return list(map(list, zip(*grid)))
