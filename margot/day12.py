@@ -11,10 +11,10 @@ def neighbours(position:Position) -> List[Position]:
     i, j = position
     return [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
     
-def perimeter(region:Region):
+def perimeter(region:Region) -> int:
     return sum([neighbour in region for pos in region for neighbour in neighbours(pos)])
 
-def num_corners(pos:Position, region:Region):
+def num_corners(pos:Position, region:Region) -> int:
     i, j = pos
     north = (i-1, j) in region
     south = (i+1, j) in region
