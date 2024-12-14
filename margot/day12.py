@@ -1,21 +1,29 @@
 import sys
 import numpy as np
-from typing import Tuple, Dict, Set
+from typing import Tuple, Dict, Set, List
 import time
 from itertools import cycle
         
 Position = Tuple[int, int]
+Region = Set[Position]
 
-def num_corners(pos:Position, positions:Set[Position]):
+def neighbours(position:Position) -> List[Position]:
+    i, j = position
+    return [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
+    
+def perimeter(region:Region):
+    return sum([neighbour in region for pos in region for neighbour in neighbours(pos)])
+
+def num_corners(pos:Position, region:Region):
     i, j = pos
-    north = (i-1, j) in positions
-    south = (i+1, j) in positions
-    west = (i, j-1) in positions
-    east = (i, j+1) in positions
-    ne = (i-1, j+1) in positions
-    nw = (i-1, j-1) in positions
-    se = (i+1, j+1) in positions
-    sw = (i+1, j-1) in positions
+    north = (i-1, j) in region
+    south = (i+1, j) in region
+    west = (i, j-1) in region
+    east = (i, j+1) in region
+    ne = (i-1, j+1) in region
+    nw = (i-1, j-1) in region
+    se = (i+1, j+1) in region
+    sw = (i+1, j-1) in region
     directions = cycle([north, ne, east, se, south, sw, west, nw])
     
     count = 0
@@ -30,32 +38,32 @@ def num_corners(pos:Position, positions:Set[Position]):
     return count
     
 
-def count_edges(positions:Set[Position]) -> int:
+def count_edges(region:Region) -> int:
     #Though the task asks for the number of edges, I'm really counting the number of corners which is the same.
-    return sum([num_corners(pos, positions) for pos in positions])
+    return sum([num_corners(pos, region) for pos in region])
 
 def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
     plant_regions = {}
     mapping = {}
-    region = 0
+    no = 0
     for plant in np.unique(data):
         mask = (data == plant)
-        plant_positions = set(zip(*np.where(mask)))
-        queue = {plant_positions.pop()}
+        plant_region = set(zip(*np.where(mask)))
+        queue = {plant_region.pop()}
         while True:
             #Explore region
-            mapping[region] = set()
+            mapping[no] = set()
             while any(queue):
                 (i, j) = queue.pop()
-                queue.update({position for position in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)] if position in plant_positions})
-                mapping[region].add((i, j))
-                plant_positions -= {(i, j)}
-            plant_positions -= mapping[region]
-            region += 1
+                queue.update({position for position in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)] if position in plant_region})
+                mapping[no].add((i, j))
+                plant_region -= {(i, j)}
+            plant_region -= mapping[no]
+            no += 1
 
             #If all plots for given plant have been mapped, continue to the next plant, else initiate a new region.
-            if any(plant_positions):
-                queue = {plant_positions.pop()}
+            if any(plant_region):
+                queue = {plant_region.pop()}
             else:
                 break
         
@@ -77,25 +85,14 @@ def main():
     
     #Task 1
     start = time.time()
-    areas = {region:len(region_mapping[region]) for region in region_mapping}
-    perimeters = {region: 0 for region in region_mapping}
-    for region in perimeters:
-        for (i, j) in region_mapping[region]:
-            perimeters[region] += not (i-1, j) in region_mapping[region]
-            perimeters[region] += not (i+1, j) in region_mapping[region]
-            perimeters[region] += not (i, j-1) in region_mapping[region]
-            perimeters[region] += not (i, j+1) in region_mapping[region]
-    
-    fencing_price = sum([perimeters[region]*areas[region] for region in region_mapping])
-    
+    fencing_price = sum([perimeter(region)*len(region) for region in region_mapping.values()])
     end = time.time()
-    
     print("Total price of fencing:", fencing_price)
     print("Runtime for task 1:", end-start)
 
     #Task 2
     start = time.time()
-    fencing_price = sum([count_edges(region_mapping[region])*areas[region] for region in region_mapping])
+    fencing_price = sum([count_edges(region)*len(region) for region in region_mapping.values()])
     end = time.time()
     print("Total price of fencing w/ bulk discount:", fencing_price)
     print("Runtime for task 2:", end-start)
