@@ -58,7 +58,6 @@ def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
                 queue.update({position for position in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)] if position in plant_region})
                 mapping[no].add((i, j))
                 plant_region -= {(i, j)}
-            plant_region -= mapping[no]
             no += 1
 
             #If all plots for given plant have been mapped, continue to the next plant, else initiate a new region.
