@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from typing import Tuple, Dict, Set
 import time
+from itertools import cycle
         
 Position = Tuple[int, int]
 
@@ -15,16 +16,16 @@ def num_corners(pos:Position, positions:Set[Position]):
     nw = (i-1, j-1) in positions
     se = (i+1, j+1) in positions
     sw = (i+1, j-1) in positions
+    directions = cycle([north, ne, east, se, south, sw, west, nw])
     
     count = 0
-    count += not nw and not (north^west)
-    count += not sw and not (south^west)
-    count += not se and not (south^east)
-    count += not ne and not (north^east)
-    count += nw and not (north or west)
-    count += sw and not (south or west)
-    count += ne and not (north or east)
-    count += se and not (south or east)
+    #north, east, south, west are cardinal directions, those in between are called ordinal.
+    cardinal1 = next(directions)
+    for _ in range(4):
+        ordinal = next(directions)
+        cardinal2 = next(directions)
+        count += (not ordinal and not (cardinal1^cardinal2)) or (ordinal and not (cardinal1 or cardinal2))
+        cardinal1 = cardinal2
     
     return count
     
