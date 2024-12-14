@@ -1,93 +1,100 @@
 import sys
 import numpy as np
-from typing import Tuple, Dict, Set
+from typing import Tuple, Dict, Set, List
 import time
+from itertools import cycle
         
 Position = Tuple[int, int]
+Region = Set[Position]
 
-def num_corners(pos:Position, positions:Set[Position]):
+def neighbours(position:Position) -> List[Position]:
+    i, j = position
+    return [(i+1, j), (i-1, j), (i, j+1), (i, j-1)]
+    
+def perimeter(region:Region):
+    return sum([neighbour in region for pos in region for neighbour in neighbours(pos)])
+
+def num_corners(pos:Position, region:Region):
     i, j = pos
-    top = (i-1, j) in positions
-    bottom = (i+1, j) in positions
-    left = (i, j-1) in positions
-    right = (i, j+1) in positions
-    is_vertical_edge = top and bottom
-    is_horizontal_edge = left and right
+    north = (i-1, j) in region
+    south = (i+1, j) in region
+    west = (i, j-1) in region
+    east = (i, j+1) in region
+    ne = (i-1, j+1) in region
+    nw = (i-1, j-1) in region
+    se = (i+1, j+1) in region
+    sw = (i+1, j-1) in region
+    directions = cycle([north, ne, east, se, south, sw, west, nw])
+    
+    count = 0
+    #north, east, south, west are cardinal directions, those in between are called ordinal.
+    cardinal1 = next(directions)
+    for _ in range(4):
+        ordinal = next(directions)
+        cardinal2 = next(directions)
+        count += (not ordinal and not (cardinal1^cardinal2)) or (ordinal and not (cardinal1 or cardinal2))
+        cardinal1 = cardinal2
+    
+    return count
+    
 
-    if is_horizontal_edge or is_vertical_edge:
-        return 0
-    elif (top or bottom) and (left or right):
-        return 1
-    elif (top or bottom) or (left or right):
-        return 2
-    else:
-        return 4
-
-def count_edges(positions:Set[Position]) -> int:
+def count_edges(region:Region) -> int:
     #Though the task asks for the number of edges, I'm really counting the number of corners which is the same.
-    return sum([num_corners(pos, positions) for pos in positions])
+    return sum([num_corners(pos, region) for pos in region])
 
 def map_regions(data:np.ndarray) -> Dict[int, Set[Position]]:
     plant_regions = {}
     mapping = {}
-    region = 0
+    no = 0
     for plant in np.unique(data):
         mask = (data == plant)
-        plant_positions = set(zip(*np.where(mask)))
-        queue = {plant_positions.pop()}
+        plant_region = set(zip(*np.where(mask)))
+        queue = {plant_region.pop()}
         while True:
             #Explore region
-            mapping[region] = set()
+            mapping[no] = set()
             while any(queue):
                 (i, j) = queue.pop()
-                queue.update({position for position in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)] if position in plant_positions})
-                mapping[region].add((i, j))
-                plant_positions -= {(i, j)}
-            plant_positions -= mapping[region]
-            region += 1
+                queue.update({position for position in [(i+1, j), (i-1, j), (i, j+1), (i, j-1)] if position in plant_region})
+                mapping[no].add((i, j))
+                plant_region -= {(i, j)}
+            no += 1
 
-            if any(plant_positions):
-                queue = {plant_positions.pop()}
+            #If all plots for given plant have been mapped, continue to the next plant, else initiate a new region.
+            if any(plant_region):
+                queue = {plant_region.pop()}
             else:
                 break
         
     return mapping
 
 def main():
+    start = time.time()
     path = "inputs/day12/"
-    name = "test"
+    name = "input"
     
     with open(path+name+".txt") as file:
         data = np.array([list(line.strip()) for line in file])
         
-    
-    #Task 1
-    start = time.time()
-    
     region_mapping = map_regions(data)
-    
-    areas = {region:len(region_mapping[region]) for region in region_mapping}
-    perimeters = {region: 0 for region in region_mapping}
-    for region in perimeters:
-        for (i, j) in region_mapping[region]:
-            perimeters[region] += not (i-1, j) in region_mapping[region]
-            perimeters[region] += not (i+1, j) in region_mapping[region]
-            perimeters[region] += not (i, j-1) in region_mapping[region]
-            perimeters[region] += not (i, j+1) in region_mapping[region]
-    
-    fencing_price = sum([perimeters[region]*areas[region] for region in region_mapping])
     
     end = time.time()
     
+    print("Runtime for data readout:", end-start)
+    
+    #Task 1
+    start = time.time()
+    fencing_price = sum([perimeter(region)*len(region) for region in region_mapping.values()])
+    end = time.time()
     print("Total price of fencing:", fencing_price)
-    print("Runtime:", end-start)
+    print("Runtime for task 1:", end-start)
 
     #Task 2
-    for region in areas:
-        print(region, region_mapping[region], areas[region], count_edges(region_mapping[region]))
-
-    fencing_price = sum([count_edges(region_mapping[region])*areas[region] for region in region_mapping])
+    start = time.time()
+    fencing_price = sum([count_edges(region)*len(region) for region in region_mapping.values()])
+    end = time.time()
     print("Total price of fencing w/ bulk discount:", fencing_price)
+    print("Runtime for task 2:", end-start)
     
     return
     
