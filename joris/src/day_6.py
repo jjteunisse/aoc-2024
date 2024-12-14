@@ -30,27 +30,25 @@ def grid_solve(
 			else:
 				y_dir, x_dir = next(directions)
 		else:
-			# Guard went out of bounds - grid solved succesfully.
 			return visited
 
 def obstacle_solve(
-	y: int, x: int, y_dir: int, x_dir: int,
+	y: int, x: int, d: tuple[int],
 	row_obs: dict[int, list[int]], col_obs: dict[int, list[int]]
 ) -> bool:
 
 	directions = cycle([Dir.N, Dir.E, Dir.S, Dir.W])
-	while next(directions) != (y_dir, x_dir): pass
+	while next(directions) != d: pass
 
 	visited = {}
 	while True:
-		y_dir, x_dir = next(directions)
-		if (y, x) not in visited:
-			visited[(y, x)] = (y_dir, x_dir)
-		elif visited[(y, x)] == (y_dir, x_dir):
-			# Previous position reached - infinite loop.
-			return False
+		loc = (y, x)
+		d = next(directions)
 
-		match (y_dir, x_dir):
+		if loc not in visited: visited[loc] = d
+		elif visited[loc] == d: return False
+
+		match d:
 			case Dir.N:
 				b = bisect(col_obs[x], y)
 				if b == 0: return True
@@ -106,7 +104,7 @@ def part_2(data: str) -> int:
 		col_obs[obs_x] = sorted(col_obs[obs_x] + [obs_y])
 
 		y, x = obs_y - y_dir, obs_x - x_dir
-		solved = obstacle_solve(y, x, y_dir, x_dir, row_obs, col_obs)
+		solved = obstacle_solve(y, x, d, row_obs, col_obs)
 		if not solved: n_stuck += 1
 
 		row_obs[obs_y].remove(obs_x)
