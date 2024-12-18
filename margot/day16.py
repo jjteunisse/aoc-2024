@@ -39,6 +39,10 @@ def main():
 
     print("Lowest possible score:", score)
     print("Runtime:", end-start)
+
+    #(Task 2) Feels almost like cheating at this point, but that's standard algorithms for you.
+    seating_spots = {node[:2] for path in nx.all_shortest_paths(graph, source+('H',), target, weight='weight') for node in path}
+    print("Number of good seating spots:", len(seating_spots)) 
     
     return
     
