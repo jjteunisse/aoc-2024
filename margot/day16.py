@@ -11,7 +11,11 @@ def main():
         
     maze = set(zip(*np.where(data != "#")))
     
-    #Something w/ pathfinding/Dijkstra's, but not in the mood for this right now.
+    #(Task 1) Make horizontal and vertical edges - I can then connect these via rotations.
+    horizontal = {((i, j), (i+1, j)) for (i, j) in maze if (i+1, j) in maze}
+    vertical = {((i, j), (i, j+1)) for (i, j) in maze if (i, j+1) in maze}
+    
+    print(horizontal)
     
     
     return
