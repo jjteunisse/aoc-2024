@@ -1,32 +1,34 @@
-def check_subeq(test: int, result: int, nums: list[int], concat: bool) -> bool:
-	if nums == []:
-		return result == test
-	elif result > test:
+def check_subeq(test: int, nums: list[int], p2: bool) -> bool:
+	if len(nums) == 1:
+		return test == nums[0]
+	elif test < 0:
 		return False
 	else:
-		return (
-			check_subeq(test, result + nums[0], nums[1:], concat) or
-			check_subeq(test, result * nums[0], nums[1:], concat) or
-			(
-				concat and
-				check_subeq(test, int(f'{result}{nums[0]}'), nums[1:], concat)
-			)
-		)
+		if check_subeq(test - nums[-1], nums[:-1], p2):
+			return True
 
-def solve(data: str, *, concat: bool) -> int:
+		d, m = divmod(test, nums[-1])
+		if m == 0 and check_subeq(d, nums[:-1], p2):
+			return True
+
+		if p2:
+			d, m = divmod(test, 10 ** len(str(nums[-1])))
+			return m == nums[-1] and check_subeq(d, nums[:-1], p2)
+
+def solve(data: str, *, p2: bool) -> int:
 	result = 0
-	for i, line in enumerate(data.split('\n')):
+	for line in data.split('\n'):
 		test, nums = line.split(': ')
 		test = int(test)
 		nums = [int(x) for x in nums.split(' ')]
 
-		if check_subeq(test, nums[0], nums[1:], concat):
+		if check_subeq(test, nums, p2):
 			result += test
 
 	return result
 
 def run(data: str, parts: list[str]):
 	if 'p1' in parts:
-		print(f'The answer to part 1 is: {solve(data, concat=False)}.')
+		print(f'The answer to part 1 is: {solve(data, p2=False)}.')
 	if 'p2' in parts:
-		print(f'The answer to part 2 is: {solve(data, concat=True)}.')
+		print(f'The answer to part 2 is: {solve(data, p2=True)}.')
