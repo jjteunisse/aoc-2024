@@ -1,40 +1,63 @@
 import sys
 import numpy as np
-from typing import Set, Tuple, Iterator, Sequence
+from typing import Set, Tuple, Iterator, Sequence, List
+from abc import ABC, abstractmethod, abstractproperty
 
 Position = Tuple[int, int]
 Direction = Tuple[int, int]
 
-class Robot:
-    direction = (0, -1) #start facing north
+class Pushable(ABC):
+    direction:Direction
+    position:Position
+    size:int
 
-    def __init__(self, position:Position) -> None:
-        self.position = position
-        
-    def move(self, direction:Direction) -> None:
+    def push(self, direction:Direction) -> None:
         self.position = (self.position[0]+direction[0], self.position[1]+direction[1])
         self.direction = direction
 
-    def push(self, boxes:Set[Position], walls:Set[Position]) -> Set[Position]:
+class Box(Pushable):
+     direction = None
+     
+     def __init__(self, position:Position, size:int) -> None:
+         self.position  = position
+         self.size = size
+
+class Robot(Pushable):
+    direction = (0, -1) #start facing north
+    size = 1
+
+    def __init__(self, position:Position) -> None:
+        self.position = position
+
+class Warehouse:
+    def __init__(self, robot:Robot, boxes:Set[Position], walls:Set[Position]) -> None:
+        self.robot = robot
+        self.boxes = boxes
+        self.walls = walls
+
+    def simulate(self, instructions:List[Direction]):
+        for direction in instructions:
+            self.robot.push(direction)
+            self.equilibrate()
+
+    def equilibrate(self):
         allowed = True
-        direction = self.direction
-        if self.position in boxes:
-            boxes.remove(self.position)
-            position = (self.position[0]+direction[0],  self.position[1]+direction[1])
-            while position in boxes:
+        direction = self.robot.direction
+        if self.robot.position in self.boxes:
+            self.boxes.remove(self.robot.position)
+            position = (self.robot.position[0]+direction[0],  self.robot.position[1]+direction[1])
+            while position in self.boxes:
                 position = (position[0]+direction[0],  position[1]+direction[1])
-            if position in walls:
+            if position in self.walls:
                 allowed = False
-                position = self.position
-            boxes.add(position)
+                position = self.robot.position
+            self.boxes.add(position)
         
         else:
-            allowed = not (self.position in walls)
+            allowed = not (self.robot.position in self.walls)
         
         if not allowed:
-            self.move((-direction[0], -direction[1]))
-
-        return boxes
+            self.robot.push((-direction[0], -direction[1]))
 
 def main():
     path = "inputs/day15/"
@@ -56,12 +79,11 @@ def main():
     walls = set(zip(*np.where(data == "#")))
     boxes = set(zip(*np.where(data == "O")))
     robot = Robot(next(zip(*np.where(data == "@"))))
+
+    warehouse = Warehouse(robot, boxes, walls)
+    warehouse.simulate(instructions)
     
-    for direction in instructions:
-        robot.move(direction)
-        boxes = robot.push(boxes, walls)
-    
-    print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in boxes]))
+    print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in warehouse.boxes]))
     
     return
 
