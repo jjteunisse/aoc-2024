@@ -6,11 +6,35 @@ Position = Tuple[int, int]
 Direction = Tuple[int, int]
 
 class Robot:
+    direction = (0, -1) #start facing north
+
     def __init__(self, position:Position) -> None:
         self.position = position
         
-    def move(self, direction) -> None:
+    def move(self, direction:Direction) -> None:
         self.position = (self.position[0]+direction[0], self.position[1]+direction[1])
+        self.direction = direction
+
+    def push(self, boxes:Set[Position], walls:Set[Position]) -> Set[Position]:
+        allowed = True
+        direction = self.direction
+        if self.position in boxes:
+            boxes.remove(self.position)
+            position = (self.position[0]+direction[0],  self.position[1]+direction[1])
+            while position in boxes:
+                position = (position[0]+direction[0],  position[1]+direction[1])
+            if position in walls:
+                allowed = False
+                position = self.position
+            boxes.add(position)
+        
+        else:
+            allowed = not (self.position in walls)
+        
+        if not allowed:
+            self.move((-direction[0], -direction[1]))
+
+        return boxes
 
 def main():
     path = "inputs/day15/"
@@ -35,24 +59,7 @@ def main():
     
     for direction in instructions:
         robot.move(direction)
-        allowed = True
-        
-        if robot.position in boxes:
-            position = robot.position
-            boxes.remove(position)
-            position = (robot.position[0]+direction[0],  robot.position[1]+direction[1])
-            while position in boxes:
-                position = (position[0]+direction[0],  position[1]+direction[1])
-            if position in walls:
-                allowed = False
-                position = robot.position
-            boxes.add(position)
-        
-        else:
-            allowed = not (robot.position in walls)
-        
-        if not allowed:
-            robot.move((-direction[0], -direction[1]))
+        boxes = robot.push(boxes, walls)
     
     print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in boxes]))
     
