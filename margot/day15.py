@@ -30,21 +30,23 @@ class Warehouse:
     def equilibrate(self):
         allowed = True
         direction = self.robot.direction
-        if self.robot.position in self.boxes:
-            self.boxes.pop(self.robot.position)
-            position = (self.robot.position[0]+direction[0],  self.robot.position[1]+direction[1])
-            while position in self.boxes:
-                position = (position[0]+direction[0],  position[1]+direction[1])
-            if position in self.walls:
-                allowed = False
-                position = self.robot.position
-            self.boxes[position] = (0, 0)
-        
-        else:
-            allowed = not (self.robot.position in self.walls)
+        queue = {self.robot.position}
+        connected = set()
+        while queue:
+            queue_new = set()
+            for position in queue:
+                if position in self.boxes:
+                    connected.add(position)
+                    queue_new.update({(position[0]+direction[0], position[1]+direction[1])})
+                elif position in self.walls:
+                    allowed = False
+                    break
+            queue = queue_new
         
         if not allowed:
             self.robot.push((-direction[0], -direction[1]))
+        else:
+            self.boxes = {(i+direction[0], j+direction[1]) if (i, j) in connected else (i, j) for (i, j) in self.boxes}
 
 def main():
     path = "inputs/day15/"
@@ -64,7 +66,7 @@ def main():
         
     #Movement on a grid again. Oh dear.
     walls = set(zip(*np.where(data == "#")))
-    boxes = {(i, j):(0, 0) for (i, j) in zip(*np.where(data == "O"))}
+    boxes = set(zip(*np.where(data == "O")))
     robot = Robot(next(zip(*np.where(data == "@"))))
 
     warehouse = Warehouse(robot, boxes, walls)
