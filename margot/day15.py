@@ -1,36 +1,23 @@
 import sys
 import numpy as np
-from typing import Set, Tuple, Iterator, Sequence, List
+from typing import Set, Tuple, Iterator, Sequence, List, Dict
 from abc import ABC, abstractmethod, abstractproperty
 
 Position = Tuple[int, int]
 Direction = Tuple[int, int]
 
-class Pushable(ABC):
-    direction:Direction
-    position:Position
-    size:int
+class Robot:
+    direction:(0, 0)
+    
+    def __init__(self, position:Position) -> None:
+        self.position = position
 
     def push(self, direction:Direction) -> None:
         self.position = (self.position[0]+direction[0], self.position[1]+direction[1])
         self.direction = direction
 
-class Box(Pushable):
-     direction = None
-     
-     def __init__(self, position:Position, size:int) -> None:
-         self.position  = position
-         self.size = size
-
-class Robot(Pushable):
-    direction = (0, -1) #start facing north
-    size = 1
-
-    def __init__(self, position:Position) -> None:
-        self.position = position
-
 class Warehouse:
-    def __init__(self, robot:Robot, boxes:Set[Position], walls:Set[Position]) -> None:
+    def __init__(self, robot:Robot, boxes:Dict[Position, Direction], walls:Set[Position]) -> None:
         self.robot = robot
         self.boxes = boxes
         self.walls = walls
@@ -44,14 +31,14 @@ class Warehouse:
         allowed = True
         direction = self.robot.direction
         if self.robot.position in self.boxes:
-            self.boxes.remove(self.robot.position)
+            self.boxes.pop(self.robot.position)
             position = (self.robot.position[0]+direction[0],  self.robot.position[1]+direction[1])
             while position in self.boxes:
                 position = (position[0]+direction[0],  position[1]+direction[1])
             if position in self.walls:
                 allowed = False
                 position = self.robot.position
-            self.boxes.add(position)
+            self.boxes[position] = (0, 0)
         
         else:
             allowed = not (self.robot.position in self.walls)
@@ -77,7 +64,7 @@ def main():
         
     #Movement on a grid again. Oh dear.
     walls = set(zip(*np.where(data == "#")))
-    boxes = set(zip(*np.where(data == "O")))
+    boxes = {(i, j):(0, 0) for (i, j) in zip(*np.where(data == "O"))}
     robot = Robot(next(zip(*np.where(data == "@"))))
 
     warehouse = Warehouse(robot, boxes, walls)
