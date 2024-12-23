@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from typing import Set, Tuple, Iterator, Sequence, List, Dict
 from abc import ABC, abstractmethod, abstractproperty
+import time
 
 Position = Tuple[int, int]
 Direction = Tuple[int, int]
@@ -30,23 +31,16 @@ class Warehouse:
     def equilibrate(self):
         allowed = True
         direction = self.robot.direction
-        queue = {self.robot.position}
-        connected = set()
-        while queue:
-            queue_new = set()
-            for position in queue:
-                if position in self.boxes:
-                    connected.add(position)
-                    queue_new.update({(position[0]+direction[0], position[1]+direction[1])})
-                elif position in self.walls:
-                    allowed = False
-                    break
-            queue = queue_new
+        position = self.robot.position
+        while position in self.boxes:
+            position = (position[0]+direction[0], position[1]+direction[1])
         
-        if not allowed:
+        if position in self.walls:
             self.robot.push((-direction[0], -direction[1]))
-        else:
-            self.boxes = {(i+direction[0], j+direction[1]) if (i, j) in connected else (i, j) for (i, j) in self.boxes}
+        elif self.robot.position in self.boxes:
+            self.boxes.remove(self.robot.position)
+            self.boxes.add(position)
+            
 
 def main():
     path = "inputs/day15/"
@@ -64,6 +58,9 @@ def main():
         dir_mapping = {"^":(-1, 0), ">":(0, 1), "<":(0, -1), "v":(1, 0)}
         instructions = [dir_mapping[char] for line in file for char in line.strip()]
         
+    
+    start = time.time()
+    
     #Movement on a grid again. Oh dear.
     walls = set(zip(*np.where(data == "#")))
     boxes = set(zip(*np.where(data == "O")))
@@ -73,6 +70,8 @@ def main():
     warehouse.simulate(instructions)
     
     print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in warehouse.boxes]))
+    end = time.time()
+    print("Runtime:", end-start)
     
     return
 
