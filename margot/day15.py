@@ -30,7 +30,7 @@ def task1(instructions:List[Direction], data:np.ndarray) -> int:
             
     return sum([100*i + j for (i, j) in boxes])
     
-def task2(instructions:List[Direction], data:np.ndarray) -> int:
+def task2(instructions:List[Direction], data:np.ndarray, show=False) -> int:
     walls = {(i, 2*j) for (i, j) in zip(*np.where(data == "#"))}
     walls.update({(i, 2*j+1) for (i, j) in zip(*np.where(data == "#"))})
     boxes = {(i, 2*j) for (i, j) in zip(*np.where(data == "O"))}
@@ -48,7 +48,7 @@ def task2(instructions:List[Direction], data:np.ndarray) -> int:
         robot = (robot[0]+direction[0], robot[1]+direction[1])
         queue = {(robot[0], j) for j in range(robot[1]-1, robot[1]+1) if (robot[0], j) in boxes}
         pushed = set()
-        allowed = not any([(robot[0], j) in walls for j in range(robot[1], robot[1]+2)])
+        allowed = not (robot in walls)
         while allowed and any(queue):
             pushed.update(queue)
             queue_new = set()
@@ -67,20 +67,20 @@ def task2(instructions:List[Direction], data:np.ndarray) -> int:
                 boxes -= pushed
                 boxes.update({(position[0]+direction[0], position[1]+direction[1]) for position in pushed})
                 
-        image[robot] = '@'
-        for position in boxes:
-            image[position] = '['
-            image[position[0], position[1]+1] = ']'
-        show(image)
-        image[image != '#'] = '.'
-        time.sleep(1)
+        if show:
+            image[robot] = '@'
+            for position in boxes:
+                image[position] = '['
+                image[position[0], position[1]+1] = ']'
+            show(image)
+            image[image != '#'] = '.'
         
     
     return sum([100*i + j for (i, j) in boxes])
 
 def main():
     path = "inputs/day15/"
-    name = "test2"
+    name = "input"
     
     with open(path+name+".txt") as file:
         data = []
@@ -103,7 +103,7 @@ def main():
     
     #Task 2
     start = time.time()
-    print("Sum of GPS coordinates (task 2):", task2(instructions, data))
+    print("Sum of GPS coordinates (task 2):", task2(instructions, data, show=False))
     end = time.time()
     print("Runtime:", end-start)
     
