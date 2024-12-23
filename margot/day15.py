@@ -6,27 +6,21 @@ import time
 
 Position = Tuple[int, int]
 Direction = Tuple[int, int]
-
-class Warehouse:
-    def __init__(self, robot:Position, boxes:Set[Position], walls:Set[Position]) -> None:
-        self.robot = robot
-        self.boxes = boxes
-        self.walls = walls
     
-    def task1(self, instructions:List[Direction]):
-        for direction in instructions:
-            self.robot = (self.robot[0]+direction[0], self.robot[1]+direction[1])
-            allowed = True
-            position = self.robot
-            while position in self.boxes:
-                position = (position[0]+direction[0], position[1]+direction[1])
+def task1(instructions:List[Direction], robot:Position, boxes:Set[Position], walls:Set[Position]) -> Tuple[Position, Set[Position]]:
+    for direction in instructions:
+        robot = (robot[0]+direction[0], robot[1]+direction[1])
+        position = robot
+        while position in boxes:
+             position = (position[0]+direction[0], position[1]+direction[1])
         
-            if position in self.walls:
-                self.robot = (self.robot[0]-direction[0], self.robot[1]-direction[1])
-            elif self.robot in self.boxes:
-                self.boxes.remove(self.robot)
-                self.boxes.add(position)
+        if position in walls:
+            robot = (robot[0]-direction[0], robot[1]-direction[1])
+        elif robot in boxes:
+            boxes.remove(robot)
+            boxes.add(position)
             
+    return robot, boxes
 
 def main():
     path = "inputs/day15/"
@@ -47,17 +41,19 @@ def main():
     
     start = time.time()
     
-    #Movement on a grid again. Oh dear.
+    #(Task 1) Movement on a grid again. Oh dear.
+    boxsize = 1
     walls = set(zip(*np.where(data == "#")))
     boxes = set(zip(*np.where(data == "O")))
     robot = next(zip(*np.where(data == "@")))
 
-    warehouse = Warehouse(robot, boxes, walls)
-    warehouse.task1(instructions)
+    robot, boxes = task1(instructions, robot, boxes, walls)
     
-    print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in warehouse.boxes]))
+    print("Sum of GPS coordinates:", sum([100*i + j for (i, j) in boxes]))
     end = time.time()
     print("Runtime:", end-start)
+    
+    #Task 2
     
     return
 
