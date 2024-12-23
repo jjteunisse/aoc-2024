@@ -10,6 +10,7 @@ Direction = Tuple[int, int]
 def show(image:np.ndarray):
     for row in image:
         print("".join(row))
+    print("\n")
     
 def task1(instructions:List[Direction], data:np.ndarray) -> int:
     walls = set(zip(*np.where(data == "#")))
@@ -30,7 +31,7 @@ def task1(instructions:List[Direction], data:np.ndarray) -> int:
             
     return sum([100*i + j for (i, j) in boxes])
     
-def task2(instructions:List[Direction], data:np.ndarray, show=False) -> int:
+def task2(instructions:List[Direction], data:np.ndarray, show_grid=False) -> int:
     walls = {(i, 2*j) for (i, j) in zip(*np.where(data == "#"))}
     walls.update({(i, 2*j+1) for (i, j) in zip(*np.where(data == "#"))})
     boxes = {(i, 2*j) for (i, j) in zip(*np.where(data == "O"))}
@@ -67,7 +68,7 @@ def task2(instructions:List[Direction], data:np.ndarray, show=False) -> int:
                 boxes -= pushed
                 boxes.update({(position[0]+direction[0], position[1]+direction[1]) for position in pushed})
                 
-        if show:
+        if show_grid:
             image[robot] = '@'
             for position in boxes:
                 image[position] = '['
@@ -80,7 +81,7 @@ def task2(instructions:List[Direction], data:np.ndarray, show=False) -> int:
 
 def main():
     path = "inputs/day15/"
-    name = "input"
+    name = "test4"
     
     with open(path+name+".txt") as file:
         data = []
@@ -103,7 +104,7 @@ def main():
     
     #Task 2
     start = time.time()
-    print("Sum of GPS coordinates (task 2):", task2(instructions, data, show=False))
+    print("Sum of GPS coordinates (task 2):", task2(instructions, data, show_grid=True))
     end = time.time()
     print("Runtime:", end-start)
     
