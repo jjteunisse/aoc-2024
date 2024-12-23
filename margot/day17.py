@@ -1,79 +1,56 @@
 import sys
-from typing import Union, List, Iterator
+from typing import List, Tuple
+import time
 
-class Computer:
-    pointer = 0
+def task1(program:List[int], registers:Tuple[int, int, int]) -> str:
+    A, B, C = registers
     
-    def __init__(self, A:int, B:int, C:int) -> None:
-        self.A = A
-        self.B = B
-        self.C = C
-        self.instructions = {0:self.adv, 1:self.bxl, 2:self.bst, 3:self.jnz, 4:self.bxc, 5:self.out, 6:self.bdv, 7:self.cdv}
+    pointer = 0
+    outputs = []
+    combo = [i for i in range(4)] + [A, B, C]
+    while pointer < len(program) - 1:
+        opcode, operand = program[pointer:pointer+2]
         
-    def apply(self, opcode:int, operand:int) -> Union[int, None]:
-        return self.instructions[opcode](operand)
-        
-    def run(self, program:List[int]) -> Iterator[int]:
-        result = []
-        while self.pointer < len(program)-1:
-            opcode, operand = program[self.pointer:self.pointer+2]
-            
-            output = self.apply(opcode, operand)
-            if output != None:
-                yield output
-        
-    def combo(self, operand:int) -> int:
-        if 0 <= operand < 4: return operand
-        elif operand == 4: return self.A
-        elif operand == 5: return self.B
-        elif operand == 6: return self.C 
-        else: raise Exception("Invalid program.")
-        
-    def adv(self, operand:int) -> None:
-        self.A //= 2**self.combo(operand)
-        self.pointer += 2
-        
-    def bxl(self, operand:int) -> None:
-        self.B = self.B^operand
-        self.pointer += 2
-        
-    def bst(self, operand:int) -> None:
-        self.B = self.combo(operand)%8
-        self.pointer += 2
-        
-    def jnz(self, operand:int) -> None:
-        if not self.A == 0:
-            self.pointer = operand
+        if opcode == 0:
+            A //= 2**combo[operand]
+        elif opcode == 1:
+            B ^= operand
+        elif opcode == 2:
+            B = combo[operand]%8
+        elif opcode == 3:
+            if A != 0:
+                pointer = operand
+                continue
+        elif opcode == 4:
+            B ^= C
+        elif opcode == 5:
+            outputs.append(str(combo[operand]%8))
+        elif opcode == 6:
+            B = A//2**combo[operand]
+        elif opcode == 7:
+            C = A//2**combo[operand]
         else:
-            self.pointer += 2
-            
-    def bxc(self, operand:int) -> None:
-        self.B = self.B^self.C
-        self.pointer += 2
+            raise Exception("Invalid opcode.")
         
-    def out(self, operand:int) -> int:
-        self.pointer += 2
-        return self.combo(operand)%8
+        combo[4:] = (A, B, C)
+        pointer += 2
         
-    def bdv(self, operand:int) -> None:
-        self.B = self.A // 2**self.combo(operand)
-        self.pointer += 2
-        
-    def cdv(self, operand:int) -> None:
-        self.C = self.A // 2**self.combo(operand)
-        self.pointer += 2
+    return ",".join(outputs)
 
 def main():
     path = "inputs/day17/"
     name = "input"
     
     with open(path+name+".txt") as file:
-        A, B, C = (int(next(file).split(":")[1]) for _ in range(3))
+        registers = tuple(int(next(file).split(":")[1]) for _ in range(3))
         next(file)
         program = [int(digit) for digit in next(file).split(":")[1].split(",")]
         
-    computer = Computer(A, B, C)
-    print("Result from all outputs:", ",".join([str(digit) for digit in computer.run(program)]))
+    #Task 1
+    start = time.time()
+    print("Result from all outputs:", task1(program, registers))
+    end = time.time()
+    print("Runtime:", end-start)
     
     return
 
