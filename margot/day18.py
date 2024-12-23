@@ -1,5 +1,4 @@
 import sys
-import networkx as nx
 import time
 
 def main(name:str, gridsize:int, task1_limit:int):
@@ -11,22 +10,29 @@ def main(name:str, gridsize:int, task1_limit:int):
     #Task 1
     start = time.time()
     
-    #Back to Dijkstra again - in this case might be worth it to just implement it myself
-    grid = nx.Graph()
-    grid.add_edges_from({((i, j), (i+1, j)) for i in range(gridsize-1) for j in range(gridsize)})
-    grid.add_edges_from({((i, j), (i, j+1)) for i in range(gridsize) for j in range(gridsize-1)})
-    grid.remove_nodes_from(data[:task1_limit])
+    #Worth implementing Dijkstra's without NetworkX for once.
+    corrupted = set(data[:task1_limit])
+    shortest_path = {(x, y):float('inf') for x in range(gridsize) for y in range(gridsize) if not (x, y) in corrupted}
+    target = (gridsize-1, gridsize-1)
     
-    shortest_path = nx.dijkstra_path(grid, (0, 0), (gridsize-1, gridsize-1))
+    num_steps = 0
+    queue = {(0, 0)}
+    while not target in queue:
+        for position in queue:
+            shortest_path.pop(position)
+        
+        for (x, y) in queue:
+            for position in [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]:
+                if position in shortest_path:
+                    shortest_path[position] = num_steps+1
+        
+        num_steps = min(shortest_path.values())
+        queue = {position for position in shortest_path if shortest_path[position] == num_steps}
     
     end = time.time()
     
-    print("Shortest path length after {} bytes have fallen:".format(task1_limit), len(shortest_path)-1)
+    print("Shortest path length after {} bytes have fallen:".format(task1_limit), shortest_path[target])
     print("Runtime:", end-start)
-    
-    #Show grid to check
-    for y in range(gridsize):
-        print("".join([('#' if (x, y) in data[:task1_limit] else 'O' if (x, y) in shortest_path else '.') for x in range(gridsize)]))
     
     return
 
