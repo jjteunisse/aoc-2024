@@ -1,3 +1,13 @@
+from bisect import insort_left
+
+N_DIGITS = 10
+
+class Block:
+	def __init__(self, _start: int, _size: int, _id: int):
+		self.start, self.size, self.id = _start, _size, _id
+
+	def __lt__(self, other): return self.start < other.start
+
 def part_1(data: str) -> int:
 	result = []
 	for i, digit in enumerate(data):
@@ -20,34 +30,43 @@ def part_1(data: str) -> int:
 	return sum([i * int(x) for i, x in enumerate(result) if x != '.'])
 
 def part_2(data: str) -> int:
-	blocks = []
+	free = {int(i): [] for i in range(N_DIGITS)}
+	used = []
+	start = 0
 	for i, digit in enumerate(data):
+		size = int(digit)
 		if i % 2 == 0:
-			blocks.append([str(i // 2), int(digit)])
+			used.append(Block(start, size, i // 2))
 		else:
-			blocks.append(['.', int(digit)])
+			free[size].append(Block(start, size, None))
+		start += size
 
-	i = len(blocks) - 1
-	while i > 0:
-		if blocks[i][0] != '.':
-			j = 0
-			while j < i:
-				if blocks[j][0] == '.':
-					if blocks[j][1] == blocks[i][1]:
-						blocks[i], blocks[j] = blocks[j], blocks[i]
-						break
-					elif blocks[j][1] > blocks[i][1]:
-						blocks[j][1] -= blocks[i][1]
-						blocks.insert(j, blocks[i][:])
-						blocks[i+1][0] = '.'
-						break
-				j += 1
-		i -= 1
+	result = 0
+	for used_block in reversed(used):
+		target_block = None
+		for i in range(used_block.size, N_DIGITS):
+			if (
+				free[i] != [] and
+				free[i][0].start < used_block.start and
+				(target_block is None or free[i][0].start < target_block.start)
+			):
+				target_block = free[i][0]
 
-	result = []
-	for b in blocks: result += [b[0]] * b[1]
+		if target_block is not None:
+			used_block.start = target_block.start
+			if target_block.size != used_block.size:
+				new_block = Block(
+					target_block.start + used_block.size,
+					target_block.size - used_block.size,
+					target_block.id
+				)
+				insort_left(free[new_block.size], new_block)
+			del free[target_block.size][0]
 
-	return sum([i * int(x) for i, x in enumerate(result) if x != '.'])
+		for i in range(used_block.size):
+			result += (used_block.start + i) * used_block.id
+
+	return result
 
 def run(data: str, parts: list[str]):
 	if 'p1' in parts:
