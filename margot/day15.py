@@ -6,6 +6,10 @@ import time
 
 Position = Tuple[int, int]
 Direction = Tuple[int, int]
+
+def show(image:np.ndarray):
+    for row in image:
+        print("".join(row))
     
 def task1(instructions:List[Direction], data:np.ndarray) -> int:
     walls = set(zip(*np.where(data == "#")))
@@ -32,7 +36,15 @@ def task2(instructions:List[Direction], data:np.ndarray) -> int:
     i, j = next(zip(*np.where(data == "@")))
     robot = (i, 2*j)
     
+    image = np.tile('.', (data.shape[0], 2*data.shape[1]))
+    mapping = {(0, 1):'>', (0, -1):'<', (1, 0):'v', (-1, 0):'^'}
+        
+    for position in walls:
+        image[position] = '#'
+        image[position[0], position[1]+1] = '#'
+    
     for direction in instructions:
+        image[robot] = mapping[direction]
         robot = (robot[0]+direction[0], robot[1]+direction[1])
         queue = {(robot[0], j) for j in range(robot[1]-1, robot[1]+1) if (robot[0], j) in boxes}
         pushed = set()
@@ -51,11 +63,19 @@ def task2(instructions:List[Direction], data:np.ndarray) -> int:
         if not allowed:
             robot = (robot[0]-direction[0], robot[1]-direction[1])
         else:
-            if any(pushed):
-                print(direction, robot, pushed)
             for position in pushed:
                 boxes -= pushed
                 boxes.update({(position[0]+direction[0], position[1]+direction[1]) for position in pushed})
+                
+        if any(pushed) and allowed:
+            print(pushed)
+            image[robot] = '@'
+            for position in boxes:
+                image[position] = '['
+                image[position[0], position[1]+1] = ']'
+            show(image)
+            image[image != '#'] = '.'
+        
     
     return sum([100*i + j for (i, j) in boxes])
 
