@@ -13,7 +13,8 @@ if __name__ == '__main__':
 
 	ranking = []
 	for d in range(d_start, d_end):
-		print(f'\nRunning day {d}...')
+		if d_start != d_end - 1:
+			print(f'\nRunning day {d}...')
 
 		day = f'day_{d}'
 		env = 'tst' if '-t' in argv else 'prd'
