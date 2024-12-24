@@ -2,21 +2,26 @@
 
 from cProfile import Profile
 from line_profiler import LineProfiler
+from os import listdir
 from sys import argv, path
 from time import time
 from types import FunctionType
 
 if __name__ == '__main__':
-	d_start, d_end = 1, 10
+	days = sorted([
+		int(f[4:].split('.')[0])
+		for f in listdir('src/')
+		if f.startswith('day')
+	])
+
 	if len(argv) > 1 and all([x.isdigit() for x in argv[1]]):
-		d_start, d_end = int(argv[1]), int(argv[1]) + 1
+		days = [argv[1]]
 
 	ranking = []
-	for d in range(d_start, d_end):
-		if d_start != d_end - 1:
+	for d in days:
+		if len(days) > 1:
 			print(f'\nRunning day {d}...')
 
-		day = f'day_{d}'
 		env = 'tst' if '-t' in argv else 'prd'
 
 		parts = ['p1', 'p2']
@@ -24,8 +29,8 @@ if __name__ == '__main__':
 		elif '-p2' in argv: parts.remove('p1')
 
 		path.append('src')
-		module = __import__(day)
-		data = open(f'data/{env}/{day}.txt').read()
+		module = __import__(f'day_{d}')
+		data = open(f'data/{env}/day_{d}.txt').read()
 		if '-cp' in argv:
 			profiler = Profile()
 			profiler.enable()
@@ -53,7 +58,7 @@ if __name__ == '__main__':
 			ranking.append((d, runtime))
 			print(f'Runtime: {runtime:.3f} seconds.')
 
-	if d_start != d_end - 1 and [flag not in argv for flag in ['-cp', '-lp']]:
+	if len(days) > 1 and '-cp' not in argv and '-lp' not in argv:
 		ranking.sort(key=lambda tup: tup[1])
 		total_runtime = sum(tup[1] for tup in ranking)
 		print(f'\nRuntime ranking:')
