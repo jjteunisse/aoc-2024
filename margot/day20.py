@@ -5,11 +5,8 @@ import time
 
 Position = Tuple[int, int]
 
-def neighbourhood(position:Position, radius:int) -> Set[Position]:
-    i, j = position
-    positions = {(i+x, j+radius-abs(x)) for x in range(-radius, radius+1)}
-    positions.update({(i+x, j-radius+abs(x)) for x in range(-radius+1, radius)})
-    return positions
+def num_cheats(distances:np.ndarray, min_saved:int, radius:int) -> int:
+    return np.sum((np.triu(distances, k=min_saved+radius) == radius))
 
 def main(name:str="input"):
     path = "inputs/day20/"
@@ -30,27 +27,16 @@ def main(name:str="input"):
     
     #Task 1
     start = time.time()
-    
-    num_cheats = 0
-    for index, source in enumerate(path[:-min_saved-2]):
-        num_cheats += len(neighbourhood(source, 2).intersection(set(path[index+min_saved+2:])))
-
+    distances = np.sum(np.absolute(np.array(path)[:, np.newaxis] - np.array(path)[np.newaxis]), axis=2)
+    print("Number of cheats that save at least {} picoseconds:".format(min_saved), num_cheats(distances, min_saved, 2))
     end = time.time()
-    
-    print("Number of cheats that save at least {} picoseconds:".format(min_saved), num_cheats)
     print("Runtime:", end-start)
     
     #Task 2
     start = time.time()
-    
-    num_cheats = 0
-    for radius in range(2, 21):
-        for index, source in enumerate(path[:-min_saved-radius]):
-            num_cheats += len(neighbourhood(source, radius).intersection(set(path[index+min_saved+radius:])))
-
+    print("Number of cheats that save at least {} picoseconds:".format(min_saved), 
+          sum([num_cheats(distances, min_saved, radius) for radius in range(2, 21)]))
     end = time.time()
-    
-    print("Number of cheats that save at least {} picoseconds:".format(min_saved), num_cheats)
     print("Runtime:", end-start)
     
     return
