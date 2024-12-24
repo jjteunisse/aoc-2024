@@ -8,6 +8,10 @@ Position = Tuple[int, int]
 def next_nearest(position:Position) -> Set[Position]:
     i, j = position
     return {(i+2, j), (i+1, j+1), (i, j+2), (i-1, j+1), (i-2, j), (i-1, j-1), (i, j-2), (i+1, j-1)}
+    
+def neighbourhood(position:Position, radius:int) -> Set[Position]:
+    i, j = position
+    return {(i+x, j+radius-x) for x in range(-radius, radius+1)}
 
 def main(name:str="input"):
     path = "inputs/day20/"
@@ -24,13 +28,28 @@ def main(name:str="input"):
         if data[position] == 'E':
             break
     
-    #Task 1
-    start = time.time()
     min_saved = 100
     
-    num_cheats = sum([len(next_nearest(source).intersection(set(path[index+min_saved+2:])))
-              for index, source in enumerate(path[:-min_saved-2])])
+    #Task 1
+    start = time.time()
     
+    num_cheats = 0
+    for index, source in enumerate(path[:-min_saved-2]):
+        num_cheats += len(next_nearest(source).intersection(set(path[index+min_saved+2:])))
+
+    end = time.time()
+    
+    print("Number of cheats that save at least {} picoseconds:".format(min_saved), num_cheats)
+    print("Runtime:", end-start)
+    
+    #Task 2
+    start = time.time()
+    
+    num_cheats = 0
+    for radius in range(2, 21):
+        for index, source in enumerate(path[:-min_saved-radius]):
+            num_cheats += len(neighbourhood(source, radius).intersection(set(path[index+min_saved+radius:])))
+
     end = time.time()
     
     print("Number of cheats that save at least {} picoseconds:".format(min_saved), num_cheats)
