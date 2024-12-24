@@ -1,7 +1,7 @@
 import sys
 import time
 
-def main(name:str="input", gridsize:int=71, task1_limit:int=1024):
+def main(name:str="input", gridsize:int=71, task1_limit:int=1024, show=False):
     path = "inputs/day18/"
     
     with open(path+name+".txt") as file:
@@ -34,45 +34,56 @@ def main(name:str="input", gridsize:int=71, task1_limit:int=1024):
     print("Runtime:", end-start)
     
     #Show grid
-    for x in range(gridsize):
-        print("".join([('X' if (x, y) == (28, 9) else '#' if (x, y) in data[:task1_limit] else '.') for y in range(gridsize)]))
+    if show:
+        for x in range(gridsize):
+            print("".join([('X' if (x, y) == (28, 9) else '#' if (x, y) in data[:task1_limit] else '.') for y in range(gridsize)]))
     
     #Task 2
     start = time.time()
     #Reachability from (0, 0); initialize at the value where the position itself is corrupted. This gives an overestimation.
     until_corrupted = {(x,y):data.index((x, y)) if (x, y) in data else float('inf') for x in range(gridsize) for y in range(gridsize)}
-    until_unreachable = until_corrupted.copy()
+    until_unreachable = {(x, y):-1 for x in range(gridsize) for y in range(gridsize)}
+    
     queue = {(0, 0)}
-    for i in range(1, 2*gridsize-1):
-        queue = set([(x+1, y) for (x, y) in queue if x < gridsize-1]
-                  + [(x, y+1) for (x, y) in queue if y < gridsize-1])
-        for (x, y) in queue:
-            until_unreachable[(x, y)] = min(max(
-                                            (until_unreachable[(x-1, y)] if x > 0 else -1),
-                                            (until_unreachable[(x, y-1)] if y > 0 else -1)
-                                            ),
-                                            until_unreachable[(x, y)])
-        #Backtrack - it might be that the new diagonal also opens up paths to previous positions.
-        #I only need to keep track of those instances where the new path is reachable for longer than the old path.
-        queue_reverse = queue.copy()
-        while queue_reverse:
-            (x, y) = queue_reverse.pop()
-            if x > 0 and until_corrupted[(x-1, y)] >= until_unreachable[(x, y)] > until_unreachable[(x-1, y)]:
-                until_unreachable[(x-1, y)] = until_unreachable[(x, y)]
-                queue_reverse.add((x-1, y))
-            if y > 0 and until_corrupted[(x, y-1)] >= until_unreachable[(x, y)] > until_unreachable[(x, y-1)]:
-                until_unreachable[(x, y-1)] = until_unreachable[(x, y)]
-                queue_reverse.add((x, y-1))
-            if x < gridsize-1 and until_corrupted[(x+1, y)] >= until_unreachable[(x, y)] > until_unreachable[(x+1, y)]:
-                until_unreachable[(x+1, y)] = until_unreachable[(x, y)]
-                queue_reverse.add((x+1, y))
-            if y < gridsize-1 and until_corrupted[(x, y+1)] >= until_unreachable[(x, y)] > until_unreachable[(x, y+1)]:
-                until_unreachable[(x, y+1)] = until_unreachable[(x, y)]
-                queue_reverse.add((x, y+1))
+    until_unreachable[(0, 0)] = until_corrupted[(0, 0)]
+    while queue:
+        (x, y) = queue.pop()
+        if x > 0 and until_unreachable[(x, y)] > until_unreachable[(x-1, y)]:
+            if until_unreachable[(x-1, y)] < until_corrupted[(x-1, y)]:
+                if until_unreachable[(x, y)] >= until_corrupted[(x-1, y)]:
+                        until_unreachable[(x-1, y)] = until_corrupted[(x-1, y)]
+                else:
+                    until_unreachable[(x-1, y)] = until_unreachable[(x, y)]
+                queue.add((x-1, y))
+        
+        if y > 0 and until_unreachable[(x, y)] > until_unreachable[(x, y-1)]:
+            if until_unreachable[(x, y-1)] < until_corrupted[(x, y-1)]:
+                if until_unreachable[(x, y)] >= until_corrupted[(x, y-1)]:
+                        until_unreachable[(x, y-1)] = until_corrupted[(x, y-1)]
+                else:
+                    until_unreachable[(x, y-1)] = until_unreachable[(x, y)]
+                queue.add((x, y-1))
+
+            
+        if x < gridsize-1 and until_unreachable[(x, y)] > until_unreachable[(x+1, y)]:
+            if until_unreachable[(x+1, y)] < until_corrupted[(x+1, y)]:
+                if until_unreachable[(x, y)] >= until_corrupted[(x+1, y)]:
+                        until_unreachable[(x+1, y)] = until_corrupted[(x+1, y)]
+                else:
+                    until_unreachable[(x+1, y)] = until_unreachable[(x, y)]
+                queue.add((x+1, y))
+
+
+        if y < gridsize-1 and until_unreachable[(x, y)] > until_unreachable[(x, y+1)]:
+            if until_unreachable[(x, y+1)] < until_corrupted[(x, y+1)]:
+                if until_unreachable[(x, y)] >= until_corrupted[(x, y+1)]:
+                        until_unreachable[(x, y+1)] = until_corrupted[(x, y+1)]
+                else:
+                    until_unreachable[(x, y+1)] = until_unreachable[(x, y)]
+                queue.add((x, y+1))
     
     end = time.time()
-    print("Number of bytes until bottom-right corner is unreachable:", until_unreachable[gridsize-1, gridsize-1])
-    print("First byte that makes bottom-right corner unreachable:", data[until_unreachable[gridsize-1, gridsize-1]])
+    print("First byte that makes bottom-right corner unreachable:", ",".join([str(i) for i in data[until_unreachable[gridsize-1, gridsize-1]]]))
     print("Runtime:", end-start)
     
     return
