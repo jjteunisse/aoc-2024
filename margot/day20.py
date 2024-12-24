@@ -5,13 +5,11 @@ import time
 
 Position = Tuple[int, int]
 
-def next_nearest(position:Position) -> Set[Position]:
-    i, j = position
-    return {(i+2, j), (i+1, j+1), (i, j+2), (i-1, j+1), (i-2, j), (i-1, j-1), (i, j-2), (i+1, j-1)}
-    
 def neighbourhood(position:Position, radius:int) -> Set[Position]:
     i, j = position
-    return {(i+x, j+radius-x) for x in range(-radius, radius+1)}
+    positions = {(i+x, j+radius-abs(x)) for x in range(-radius, radius+1)}
+    positions.update({(i+x, j-radius+abs(x)) for x in range(-radius+1, radius)})
+    return positions
 
 def main(name:str="input"):
     path = "inputs/day20/"
@@ -35,7 +33,7 @@ def main(name:str="input"):
     
     num_cheats = 0
     for index, source in enumerate(path[:-min_saved-2]):
-        num_cheats += len(next_nearest(source).intersection(set(path[index+min_saved+2:])))
+        num_cheats += len(neighbourhood(source, 2).intersection(set(path[index+min_saved+2:])))
 
     end = time.time()
     
