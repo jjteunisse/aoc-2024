@@ -1,14 +1,14 @@
 def evolve(secret: int) -> int:
-	secret = (secret ^ secret << 6) & 0xFFFFFF
-	secret = (secret ^ secret >> 5) & 0xFFFFFF
-	secret = (secret ^ secret << 11) & 0xFFFFFF
+	secret ^= (secret << 6) & 0xFFFFFF
+	secret ^= (secret >> 5) & 0xFFFFFF
+	secret ^= (secret << 11) & 0xFFFFFF
 	return secret
 
 def part_1(data: str) -> int:
 	secrets = [int(x) for x in data.split('\n')]
 
 	for monkey_id, secret in enumerate(secrets):
-		for _ in range(2000):
+		for i in range(2000):
 			secret = evolve(secret)
 		secrets[monkey_id] = secret
 
@@ -19,19 +19,19 @@ def part_2(data: str) -> int:
 
 	prices_per_seq = {}
 	for monkey_id, secret in enumerate(secrets):
-		seq, price = tuple(), 0
+		seq, old_price = tuple(), 0
 		for _ in range(2000):
-			new_secret = evolve(secret)
-			new_price = new_secret % 10
+			secret = evolve(secret)
 
-			diff = new_price - price
+			price = secret % 10
+			diff = price - old_price
+			old_price = price
+
 			seq = ((diff,) + seq)[:4]
 			if seq not in prices_per_seq:
 				prices_per_seq[seq] = {}
 			if monkey_id not in prices_per_seq[seq]:
-				prices_per_seq[seq][monkey_id] = new_price
-
-			secret, price = new_secret, new_price
+				prices_per_seq[seq][monkey_id] = price
 
 	return max([sum(prices.values()) for seq, prices in prices_per_seq.items()])
 
