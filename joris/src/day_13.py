@@ -1,18 +1,20 @@
 import re
-import sympy as sp
 
 def solve(data: str, *, part: int) -> int:
-	total_cost = 0
+	result = 0
 	for block in data.split('\n\n'):
 		ax, ay, bx, by, x, y = [int(x) for x in re.findall(r'\d+', block)]
-		if part == 2: x, y = x + int(1E13), y + int(1E13)
 
-		a, b = sp.symbols('a, b')
-		result = sp.solve([a * ax + b * bx - x, a * ay + b * by - y], a, b)
-		if type(result[a]) == type(result[b]) == sp.core.numbers.Integer:
-			total_cost += 3 * result[a] + result[b]
+		if part == 2:
+			x, y = x + int(1E13), y + int(1E13)
 
-	return total_cost
+		ad, am = divmod(x * by + y * -bx, ax * by + ay * -bx)
+		if am == 0:
+			bd, bm = divmod(x - ad * ax, bx)
+			if bm == 0:
+				result += 3 * ad + bd
+
+	return result
 
 def run(data: str, parts: list[str]):
 	if 'p1' in parts:
