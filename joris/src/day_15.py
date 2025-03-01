@@ -30,68 +30,38 @@ def part_1(data: str) -> int:
 	ry, rx = find_robot(grid)
 
 	for i, move in enumerate(moves):
-		print(f'Iteration {i} (next: {move})')
-		print_grid(grid)
-		if move == '<':
-			if grid[ry][rx - 1] in ['.', 'O']:
-				if grid[ry][rx - 1] == 'O':
-					x_off = 2
-					while grid[ry][rx - x_off] == 'O':
-						x_off += 1
-					if grid[ry][rx - x_off] == '.':
-						grid[ry][rx - x_off] = 'O'
-					else:
-						continue
-				grid[ry][rx] = '.'
-				rx -= 1
-				grid[ry][rx] = '@'
-		elif move == '^':
-			if grid[ry - 1][rx] in ['.', 'O']:
-				if grid[ry - 1][rx] == 'O':
-					y_off = 2
-					while grid[ry - y_off][rx] == 'O':
-						y_off += 1
-					if grid[ry - y_off][rx] == '.':
-						grid[ry - y_off][rx] = 'O'
-					else:
-						continue
-				grid[ry][rx] = '.'
-				ry -= 1
-				grid[ry][rx] = '@'
-		elif move == '>':
-			if grid[ry][rx + 1] in ['.', 'O']:
-				if grid[ry][rx + 1] == 'O':
-					x_off = 2
-					while grid[ry][rx + x_off] == 'O':
-						x_off += 1
-					if grid[ry][rx + x_off] == '.':
-						grid[ry][rx + x_off] = 'O'
-					else:
-						continue
-				grid[ry][rx] = '.'
-				rx += 1
-				grid[ry][rx] = '@'
-		elif move == 'v':
-			if grid[ry + 1][rx] in ['.', 'O']:
-				if grid[ry + 1][rx] == 'O':
-					y_off = 2
-					while grid[ry + y_off][rx] == 'O':
-						y_off += 1
-					if grid[ry + y_off][rx] == '.':
-						grid[ry + y_off][rx] = 'O'
-					else:
-						continue
-				grid[ry][rx] = '.'
-				ry += 1
-				grid[ry][rx] = '@'
+		# == DEBUG ==
+		# print(f'Iteration {i} (next: {move})')
+		# print_grid(grid)
 
-	result = 0
-	for y, line in enumerate(grid):
-		for x, char in enumerate(line):
-			if char == 'O':
-				result += y * 100 + x
+		dy, dx = 0, 0
+		match move:
+			case '^': dy = -1
+			case '>': dx = 1
+			case 'v': dy = 1
+			case '<': dx = -1
 
-	return result
+		if grid[ry + dy][rx + dx] != '#':
+			if grid[ry + dy][rx + dx] == 'O':
+				y_off, x_off = dy, dx
+				while grid[ry + y_off][rx + x_off] == 'O':
+					y_off += dy
+					x_off += dx
+				if grid[ry + y_off][rx + x_off] == '.':
+					grid[ry + y_off][rx + x_off] = 'O'
+				else:
+					continue
+			grid[ry][rx] = '.'
+			ry += dy
+			rx += dx
+			grid[ry][rx] = '@'
+
+	return sum([
+		y * 100 + x
+		for y, line in enumerate(grid)
+		for x, char in enumerate(line)
+		if char == 'O'
+	])
 
 def part_2(data: str) -> int:
 	pass
