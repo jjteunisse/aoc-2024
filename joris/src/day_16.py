@@ -1,12 +1,13 @@
 import colorama as cr
+import sys
 
 type Grid = list[list[str]]
 type Point = tuple[int, int]
 
-def find_char(grid: Grid, char_to_find: str) -> Point:
+def find_char(grid: Grid, query: str) -> Point:
 	for y, line in enumerate(grid):
 		for x, char in enumerate(line):
-			if char == char_to_find:
+			if char == query:
 				return y, x
 
 def print_grid(grid: Grid):
@@ -29,44 +30,38 @@ def part_1(data: str) -> int:
 	sy, sx, sd = find_char(grid, 'S') + ('E',)
 	ey, ex = find_char(grid, 'E')
 
-	dirs = {'N': (-1, 0), 'E': (0, 1), 'S': (1, 0), 'W': (0, -1)}
-	scores = {
-		(y, x): {d: None for d in dirs}
+	dirs = {
+		'N': (-1, 0), 'S': (1, 0),
+		'W': (0, -1), 'E': (0, 1),
+	}
+	turn_dirs = {
+		'N': ['W', 'E'], 'S': ['W', 'E'],
+		'W': ['N', 'S'], 'E': ['N', 'S'],
+	}
+
+	min_scores = {
+		(y, x): {d: sys.maxsize for d in dirs}
 		for y in range(len(grid))
 		for x in range(len(grid[0]))
 		if grid[y][x] != '#'
 	}
+	min_end_score = sys.maxsize
 
-	todo = [(0, sy, sx, sd)]
-	min_score = None
+	todo = [(sy, sx, sd, 0)]
 	while todo:
-		# print(f'New iteration: {todo[0]} {len(todo)=}')
-		score, y, x, d = todo.pop(0)
+		y, x, d, score = todo.pop(0)
+		if score < min_end_score and score < min_scores[(y, x)][d]:
+			min_scores[(y, x)][d] = score
+			if (y, x) == (ey, ex):
+				min_end_score = score
+			else:
+				dy, dx = dirs[d]
+				if grid[y + dy][x + dx] != '#':
+					todo.append((y + dy, x + dx, d, score + 1))
+				for td in turn_dirs[d]:
+					todo.append((y, x, td, score + 1000))
 
-		if (y, x) == (ey, ex):
-			if min_score == None or score < min_score:
-				min_score = score
-			continue
-
-		if min_score != None and score > min_score:
-			continue
-
-		if scores[(y, x)][d] != None and score > scores[(y, x)][d]:
-			continue
-
-		scores[(y, x)][d] = score
-
-		dy, dx = dirs[d]
-		if grid[y + dy][x + dx] != '#':
-			todo.append((score + 1, y + dy, x + dx, d))
-		if d in ['N', 'S']:
-			todo.append((score + 1000, y, x, 'W'))
-			todo.append((score + 1000, y, x, 'E'))
-		elif d in ['W', 'E']:
-			todo.append((score + 1000, y, x, 'N'))
-			todo.append((score + 1000, y, x, 'S'))
-
-	return min_score
+	return min_end_score
 
 def part_2(data: str) -> int:
 	pass
