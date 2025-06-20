@@ -19,11 +19,12 @@ def print_grid(grid: Grid):
 				case 'E': color = cr.Fore.GREEN
 				case '#': color = cr.Fore.BLUE
 				case '.': color = cr.Fore.WHITE
+				case '@': color = cr.Fore.CYAN
 			print(color + char, end='')
 		print()
 	print()
 
-def part_1(data: str) -> int:
+def solve(data: str, *, part: int) -> int:
 	cr.init(autoreset=True)
 
 	grid = [list(line) for line in data.split('\n')]
@@ -47,27 +48,36 @@ def part_1(data: str) -> int:
 	}
 	min_end_score = sys.maxsize
 
-	todo = [(sy, sx, sd, 0)]
+	todo = [(sy, sx, sd, 0, set())]
+	best_hists = set()
 	while todo:
-		y, x, d, score = todo.pop(0)
-		if score < min_end_score and score < min_scores[(y, x)][d]:
+		y, x, d, score, hist = todo.pop(0)
+		hist = hist | {(y, x)}
+		if score <= min_end_score and score <= min_scores[(y, x)][d]:
 			min_scores[(y, x)][d] = score
 			if (y, x) == (ey, ex):
-				min_end_score = score
+				if score < min_end_score:
+					min_end_score = score
+					best_hists = hist
+				else:
+					best_hists = best_hists | hist
 			else:
 				dy, dx = dirs[d]
 				if grid[y + dy][x + dx] != '#':
-					todo.append((y + dy, x + dx, d, score + 1))
+					todo.append((y + dy, x + dx, d, score + 1, hist))
 				for td in turn_dirs[d]:
-					todo.append((y, x, td, score + 1000))
+					todo.append((y, x, td, score + 1000, hist))
 
-	return min_end_score
+	tile_count = 0
+	for y, x in best_hists:
+		grid[y][x] = '@'
+		tile_count += 1
+	print_grid(grid)
 
-def part_2(data: str) -> int:
-	pass
+	return min_end_score if part == 1 else tile_count
 
 def run(data: str, parts: list[str]):
 	if 'p1' in parts:
-		print(f'The answer to part 1 is: {part_1(data)}.')
+		print(f'The answer to part 1 is: {solve(data, part=1)}.')
 	if 'p2' in parts:
-		print(f'The answer to part 2 is: {part_2(data)}.')
+		print(f'The answer to part 2 is: {solve(data, part=2)}.')
